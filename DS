@@ -1,0 +1,68 @@
+const Discord = require('discord.js');
+const axios = require('axios');
+
+const client = new Discord.Client();
+const prefix = '/';
+
+const sinusbotApiUrl = 'http://endereco-do-seu-sinusbot.com:8087/api/v1';
+
+client.on('ready', () => {
+  console.log(`Bot iniciado como ${client.user.tag}!`);
+});
+
+client.on('message', async message => {
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
+  
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  const command = args.shift().toLowerCase();
+  
+  if (command === 'ban') {
+    if (!message.member.hasPermission('BAN_MEMBERS')) {
+      message.reply('Você não tem permissão para banir membros!');
+      return;
+    }
+    if (!message.mentions.users.size) {
+      message.reply('Você precisa mencionar um usuário para banir!');
+      return;
+    }
+    const member = message.mentions.members.first();
+    try {
+      await member.ban();
+      message.channel.send(`${member.user.tag} foi banido do servidor!`);
+    } catch (error) {
+      console.error(error);
+      message.reply('Ocorreu um erro ao tentar banir o usuário!');
+    }
+  } else if (command === 'warn') {
+    if (!message.member.hasPermission('KICK_MEMBERS')) {
+      message.reply('Você não tem permissão para advertir membros!');
+      return;
+    }
+    if (!message.mentions.users.size) {
+      message.reply('Você precisa mencionar um usuário para advertir!');
+      return;
+    }
+    const member = message.mentions.members.first();
+    // Aqui você pode adicionar seu código para registrar o aviso do membro
+    message.channel.send(`${member.user.tag} recebeu um aviso!`);
+  } else if (command === 'warns') {
+    if (!message.member.hasPermission('KICK_MEMBERS')) {
+      message.reply('Você não tem permissão para ver os avisos de membros!');
+      return;
+    }
+    if (!message.mentions.users.size) {
+      message.reply('Você precisa mencionar um usuário para ver seus avisos!');
+      return;
+    }
+    const member = message.mentions.members.first();
+    // Aqui você pode adicionar seu código para obter os avisos do membro
+    const numWarns = 2; // substitua por seu código para obter o número de avisos do membro
+    message.channel.send(`${member.user.tag} tem ${numWarns} avisos.`);
+  } else if (command === 'nowplaying') {
+    const sinusbotResponse = await axios.get(`${sinusbotApiUrl}/instance`);
+    const currentSong = sinusbotResponse.data.currentTrack.title;
+    message.channel.send(`Tocando agora: ${currentSong}`);
+  }
+});
+
+client.login('seu_token');
